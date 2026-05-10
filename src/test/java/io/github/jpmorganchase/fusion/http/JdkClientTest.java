@@ -211,8 +211,13 @@ public class JdkClientTest {
 
         HttpResponse<String> response = httpClientWithProxy.get(API_URL, Collections.emptyMap());
 
-        wiremockProxy.verify(getRequestedFor(urlEqualTo(BASE_PATH)));
-        validateGetRequest(response);
+        // User-Agent is verified at the proxy hop because WireMock's proxy rewrites
+        // it on forwarded requests.
+        wiremockProxy.verify(
+                getRequestedFor(urlEqualTo(BASE_PATH)).withHeader("User-Agent", WireMock.equalTo(EXPECTED_USER_AGENT)));
+        verify(getRequestedFor(urlEqualTo(BASE_PATH)));
+        assertThat(response.getStatusCode(), is(equalTo(HttpURLConnection.HTTP_OK)));
+        assertThat(response.getBody(), is(equalTo(SAMPLE_RESPONSE_BODY)));
         assertThat(response.isError(), is(false));
     }
 
